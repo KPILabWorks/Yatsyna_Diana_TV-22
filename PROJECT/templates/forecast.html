@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title %}Forecast{% endblock %}
+{% block content %}
+<h2 class="mb-4">7-Day PM₂․₅ Forecast</h2>
+<form method="post" class="row g-3 mb-4">
+  <div class="col-md-4">
+    <input name="lat" type="number" step="any" class="form-control" placeholder="Latitude" required>
+  </div>
+  <div class="col-md-4">
+    <input name="lon" type="number" step="any" class="form-control" placeholder="Longitude" required>
+  </div>
+  <div class="col-md-4 text-end">
+    <button class="btn btn-primary w-100">Get Forecast</button>
+  </div>
+</form>
+
+{% if forecast %}
+  <div class="card">
+    <div class="card-body">
+      <ul class="list-group list-group-flush">
+        {% for f in forecast %}
+          <li class="list-group-item">{{ f.date }} — {{ f.pm2_5 }} μg/m³</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+{% endif %}
+{% endblock %}

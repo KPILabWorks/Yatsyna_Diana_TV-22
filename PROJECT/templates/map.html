@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block title %}Map{% endblock %}
+{% block content %}
+<h2>Air Quality Map</h2>
+<div id="map" style="height:500px;"></div>
+{% endblock %}
+
+{% block scripts %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+<script>
+  const points = {{ points|tojson }};
+  const map = L.map('map').setView([50,30], 6);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap'
+  }).addTo(map);
+  points.forEach(p => {
+    L.circle([p.lat, p.lon], {
+      radius: p.val * 1000,
+      fillOpacity: 0.4
+    }).bindPopup(`${p.city}: ${p.val} μg/m³`)
+      .addTo(map);
+  });
+</script>
+{% endblock %}

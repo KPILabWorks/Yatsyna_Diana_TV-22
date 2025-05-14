@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% block title %}Analysis{% endblock %}
+{% block content %}
+<h2 class="mb-4">Air Quality Analysis</h2>
+<div class="mb-3">
+  <a href="{{ url_for('forecast_view') }}" class="btn btn-outline-info">Перейти до прогнозування</a>
+</div>
+<form method="post" class="row g-3 mb-4">
+  <div class="col-md-3">
+    <input name="lat" type="number" step="any" class="form-control" placeholder="Latitude" required>
+  </div>
+  <div class="col-md-3">
+    <input name="lon" type="number" step="any" class="form-control" placeholder="Longitude" required>
+  </div>
+  <div class="col-md-3">
+    <input name="start_date" type="date" class="form-control" required>
+  </div>
+  <div class="col-md-3">
+    <input name="end_date" type="date" class="form-control" required>
+  </div>
+  <div class="col-12 text-end">
+    <button class="btn btn-success">Analyze</button>
+  </div>
+</form>
+
+{% if result.history %}
+  <div class="d-flex justify-content-end mb-3">
+    <a href="{{ url_for('download_history',
+                       lat=result.lat, lon=result.lon,
+                       start=result.start, end=result.end) }}"
+       class="btn btn-outline-secondary">
+      Download CSV
+    </a>
+  </div>
+
+  <div class="row mb-4">
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-header">Factors</div>
+        <div class="card-body">{{ result.factors|join(', ') }}</div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-header">Change</div>
+        <div class="card-body">{{ result.change }} μg/m³</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mb-4">
+    <canvas id="forecastChart"></canvas>
+  </div>
+
+  <h4 class="mb-3">Top 5 Polluted Cities</h4>
+  <div class="row mb-4">
+    {% for t in result.top5 %}
+    <div class="col-md-2">
+      <div class="card text-white bg-danger mb-3">
+        <div class="card-body text-center">
+          <h5 class="card-title">{{ t.city }}</h5>
+          <p class="card-text">{{ t.pm2_5 }} μg/m³</p>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <h4 class="mb-3">Historical PM₂․₅</h4>
+  <table class="table table-striped">
+    <thead><tr><th>Date</th><th>PM₂․₅</th><th>Norm</th></tr></thead>
+    <tbody>
+      {% for r in result.history %}
+      <tr>
+        <td>{{ r.dt }}</td>
+        <td>{{ r.pm2_5 }}</td>
+        <td>{{ "%.2f"|format(r.pm2_5_norm) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+  {% if result.forecast %}
+  <script>
+    const labels = {{ result.forecast|map(attribute='date')|list|tojson }};
+    const data = {{ result.forecast|map(attribute='pm2_5')|list|tojson }};
+    new Chart(document.getElementById('forecastChart'), {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'PM2.5 Forecast',
+          data: data,
+          fill: false,
+          tension: 0.4
+        }]
+      },
+      options: { scales: { y: { beginAtZero: true }}}
+    });
+  </script>
+  {% endif %}
+{% endblock %}
